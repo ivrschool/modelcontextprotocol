@@ -1,0 +1,19 @@
+[project]
+name = "tutotials"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-generativeai>=0.8.5",
+    "langchain>=0.3.25",
+    "langchain-google-genai>=2.0.10",
+    "langchain-mcp-adapters>=0.1.7",
+    "langgraph>=0.4.8",
+    "python-dotenv>=1.1.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "tutorials",
+]

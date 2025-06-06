@@ -33,7 +33,6 @@ from mcp.client.stdio import stdio_client             # For establishing a stdio
 from langchain_mcp_adapters.tools import load_mcp_tools  # Adapter to convert MCP tools to LangChain compatible tools
 from langgraph.prebuilt import create_react_agent        # Function to create a prebuilt React agent using LangGraph
 from langchain_google_genai import ChatGoogleGenerativeAI  # Wrapper for the Google Gemini API via LangChain
-from langchain.schema import AIMessage, HumanMessage  
 
 # ---------------------------
 # Environment Setup
@@ -159,49 +158,61 @@ async def run_agent():
         # Start the interactive chat loop
         print("\nMCP Client Ready! Type 'quit' to exit.")
 
-        # Initialize chat history (as list of HumanMessage / AIMessage)
+        # Initialize chat history for memory
         chat_history = []
 
         while True:
             # Prompt the user to enter a query
             query = input("\nQuery: ").strip()
             if query.lower() == "quit":
+                # Exit the loop if the user types 'quit'
                 break
 
-            # Add user message as HumanMessage
-            chat_history.append(HumanMessage(content=query))
+            # Add user message to chat history
+            chat_history.append({"role": "user", "content": query})
 
-            # Invoke agent with full chat history (as expected by LangGraph agent)
+            # Invoke the agent with FULL chat history (memory!)
             response = await agent.ainvoke({"messages": chat_history})
 
-            # Extract AI message content and add as AIMessage
-            ai_message_content = None
+            # Extract AI message content and add to history
+            ai_message = None
+            # LangChain agent returns AI message as "content" or inside response — adjust based on format
             if isinstance(response, dict) and "content" in response:
-                ai_message_content = response["content"]
-            elif isinstance(response, dict) and "messages" in response:
-                # fallback - last AIMessage
-                last_ai_msg = None
-                for msg in reversed(response["messages"]):
-                    if msg.__class__.__name__ == "AIMessage":
-                        last_ai_msg = msg
-                        break
-                if last_ai_msg:
-                    ai_message_content = last_ai_msg.content
-                else:
-                    ai_message_content = str(response)
+                ai_message = response["content"]
             else:
-                ai_message_content = str(response)
+                # fallback: raw response string
+                ai_message = str(response)
 
-            # Add AIMessage to chat history
-            chat_history.append(AIMessage(content=ai_message_content))
+            chat_history.append({"role": "assistant", "content": ai_message})
 
-            # Print only the last AIMessage
+            # Print AI response
             print("\nResponse:")
             try:
-                formatted = json.dumps({"type": "AIMessage", "content": ai_message_content}, indent=2)
-                print(formatted)
+                # If response has 'messages' list, extract the last AIMessage only
+                if isinstance(response, dict) and "messages" in response:
+                    # Find the last AI message
+                    last_ai_msg = None
+                    for msg in reversed(response["messages"]):
+                        if msg.__class__.__name__ == "AIMessage":
+                            last_ai_msg = msg
+                            break
+
+                    if last_ai_msg:
+                        formatted = json.dumps(last_ai_msg, indent=2, cls=CustomEncoder)
+                        print(formatted)
+                    else:
+                        # fallback - print whole response
+                        formatted = json.dumps(response, indent=2, cls=CustomEncoder)
+                        print(formatted)
+
+                else:
+                    # If response is not a dict with "messages", just print it
+                    formatted = json.dumps(response, indent=2, cls=CustomEncoder)
+                    print(formatted)
+
             except Exception:
-                print(ai_message_content)
+                print(str(response))
+
 
 
 # ---------------------------

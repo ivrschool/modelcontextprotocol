@@ -6,16 +6,24 @@ from langchain_google_genai import ChatGoogleGenerativeAI  # Wrapper for the Goo
 from langchain.schema import AIMessage, HumanMessage, SystemMessage  # For defining messages
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
-
+from langchain_openai import ChatOpenAI
+import openai
 # Load environment variables (make sure GOOGLE_API_KEY is in your .env)
 load_dotenv()
 
 # Initialize the Google Gemini LLM
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+# llm = ChatGoogleGenerativeAI(
+#     model="gemini-2.0-flash",
+#     temperature=0,
+#     max_retries=2,
+#     google_api_key=os.getenv("GOOGLE_API_KEY")
+# )
+#
+os.environ["OPENAI_API_KEY"]
+llm = ChatOpenAI(
+    model="gpt-3.5-turbo",
     temperature=0,
     max_retries=2,
-    google_api_key=os.getenv("GOOGLE_API_KEY")
 )
 
 memory = ConversationBufferMemory()

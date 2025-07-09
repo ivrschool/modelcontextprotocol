@@ -1,0 +1,10 @@
+{
+    "dependencies": ["."],
+    "graphs": {
+        "relationship_agent": {
+            "path": "./src/agent/relationship_agent.py:relationship_graph",
+            "description": "A chat agent that helps in solving relationship problems. it takes input in string formate in natural language and returns a response in string formate in natural language."
+        }
+    },
+    "env": ".env"
+}
